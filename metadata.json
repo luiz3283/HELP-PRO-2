@@ -1,0 +1,8 @@
+{
+  "name": "MOTO HELP PRO KM",
+  "description": "Aplicativo urbano para controle de quilometragem de motoboys com registro fotográfico e IA.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}

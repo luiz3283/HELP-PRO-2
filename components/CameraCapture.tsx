@@ -173,8 +173,8 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ mode, onCapture, o
   };
 
   const handleConfirm = () => {
-    if (!manualKm) {
-      alert("Por favor, informe a quilometragem.");
+    if (!manualKm || manualKm.trim() === '') {
+      alert("Por favor, digite a quilometragem exibida no painel.");
       return;
     }
     const km = parseInt(manualKm);
@@ -202,6 +202,8 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ mode, onCapture, o
 
   // REVIEW MODE
   if (capturedImage) {
+    const isKmValid = manualKm && manualKm.trim().length > 0 && !isNaN(parseInt(manualKm));
+
     return (
       <div className="fixed inset-0 z-50 bg-black flex flex-col">
         <div className="flex-1 relative bg-urban-900 overflow-y-auto">
@@ -218,9 +220,10 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ mode, onCapture, o
                 </p>
              </div>
 
-             <div className="bg-urban-800 p-4 rounded-xl border border-urban-blue/30 shadow-lg shadow-blue-900/10">
+             <div className={`bg-urban-800 p-4 rounded-xl border-2 shadow-lg transition-colors ${!isKmValid ? 'border-red-500/50 shadow-red-900/10' : 'border-urban-blue/30 shadow-blue-900/10'}`}>
                 <label className="block text-urban-blue font-bold text-lg mb-2">
                   {mode === 'START' ? 'Quilometragem Inicial' : 'Quilometragem Final'}
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
                 <div className="relative">
                   <input 
@@ -229,23 +232,34 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ mode, onCapture, o
                     placeholder="000000"
                     value={manualKm}
                     onChange={(e) => setManualKm(e.target.value)}
-                    className="w-full bg-black border-2 border-urban-700 rounded-lg p-4 text-3xl font-mono text-white focus:border-urban-blue focus:outline-none focus:ring-1 focus:ring-urban-blue"
+                    className="w-full bg-black border-2 border-urban-700 rounded-lg p-4 text-3xl font-mono text-white focus:border-urban-blue focus:outline-none focus:ring-1 focus:ring-urban-blue placeholder-gray-700"
                     autoFocus
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">KM</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  *Verifique o valor lido na foto e corrija se necessário.
-                </p>
+                {!isKmValid ? (
+                   <p className="text-sm text-red-400 mt-2 font-medium">
+                     ⚠ Digite a quilometragem para salvar.
+                   </p>
+                ) : (
+                   <p className="text-xs text-green-400 mt-2">
+                     ✔ Quilometragem preenchida.
+                   </p>
+                )}
              </div>
           </div>
         </div>
 
-        <div className="p-4 bg-urban-900 border-t border-urban-700 flex gap-4 absolute bottom-0 w-full">
+        <div className="p-4 bg-urban-900 border-t border-urban-700 flex gap-4 absolute bottom-0 w-full safe-area-bottom">
            <Button variant="secondary" onClick={handleRetake} className="flex-1">
               <RotateCcw className="w-4 h-4" /> Refazer
            </Button>
-           <Button variant="primary" onClick={handleConfirm} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+           <Button 
+             variant="primary" 
+             onClick={handleConfirm} 
+             className="flex-1 bg-green-600 hover:bg-green-700 text-white transition-all"
+             disabled={!isKmValid}
+           >
               <Save className="w-4 h-4" /> Salvar
            </Button>
         </div>
@@ -287,7 +301,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ mode, onCapture, o
         </div>
 
         {/* Controls */}
-        <div className="p-8 bg-black flex justify-center items-center gap-8">
+        <div className="p-8 bg-black flex justify-center items-center gap-8 safe-area-bottom">
            <button 
              onClick={takePhoto}
              disabled={loading || processing}

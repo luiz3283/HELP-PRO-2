@@ -4,13 +4,13 @@ import { saveProfile, getProfile, saveLog, getLogs } from './services/storageSer
 import { Button } from './components/Button';
 import { CameraCapture } from './components/CameraCapture';
 import { History } from './components/History';
-import { Bike, User, MapPin, Camera as CameraIcon, AlertTriangle, Loader2 } from 'lucide-react';
+import { Bike, User, MapPin, Camera as CameraIcon, AlertTriangle, Loader2, Edit2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [logs, setLogs] = useState<ShiftLog[]>([]);
-  const [view, setView] = useState<'ONBOARDING' | 'DASHBOARD' | 'CAMERA'>('ONBOARDING');
+  const [view, setView] = useState<'ONBOARDING' | 'DASHBOARD' | 'CAMERA' | 'EDIT_PROFILE'>('ONBOARDING');
   const [captureMode, setCaptureMode] = useState<'START' | 'END' | null>(null);
 
   // Form states for onboarding
@@ -160,8 +160,77 @@ const App: React.FC = () => {
       </div>
     );
   }
+  
+  // 3. Edit Profile View
+  if (view === 'EDIT_PROFILE') {
+    return (
+      <div className="min-h-screen bg-urban-900 flex flex-col justify-center px-6 py-12">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-urban-800 mb-4 border border-urban-700">
+            <User className="w-8 h-8 text-urban-blue" />
+          </div>
+          <h1 className="text-2xl font-bold text-white">Editar Perfil</h1>
+          <p className="text-gray-400 text-sm">Atualize seus dados cadastrais</p>
+        </div>
 
-  // 3. Camera View
+        <form onSubmit={handleRegister} className="space-y-4 max-w-md mx-auto w-full">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Nome Completo</label>
+            <input 
+              type="text" 
+              required
+              className="w-full bg-urban-800 border border-urban-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-urban-blue focus:outline-none"
+              value={formData.name}
+              onChange={e => setFormData({...formData, name: e.target.value})}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Empresa</label>
+            <input 
+              type="text" 
+              required
+              className="w-full bg-urban-800 border border-urban-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-urban-blue focus:outline-none"
+              value={formData.company}
+              onChange={e => setFormData({...formData, company: e.target.value})}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Modelo Moto</label>
+              <input 
+                type="text" 
+                required
+                className="w-full bg-urban-800 border border-urban-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-urban-blue focus:outline-none"
+                value={formData.bikeModel}
+                onChange={e => setFormData({...formData, bikeModel: e.target.value})}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Placa</label>
+              <input 
+                type="text" 
+                required
+                className="w-full bg-urban-800 border border-urban-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-urban-blue focus:outline-none"
+                value={formData.plate}
+                onChange={e => setFormData({...formData, plate: e.target.value})}
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-3 pt-4">
+             <Button type="button" variant="secondary" fullWidth onClick={() => setView('DASHBOARD')}>
+               Cancelar
+             </Button>
+             <Button type="submit" fullWidth>
+               Salvar
+             </Button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  // 4. Camera View
   if (view === 'CAMERA') {
     return (
       <CameraCapture 
@@ -172,7 +241,7 @@ const App: React.FC = () => {
     );
   }
 
-  // 4. Dashboard View (Logged In)
+  // 5. Dashboard View (Logged In)
   const lastLog = logs.length > 0 ? logs[0] : null;
   const isWorking = lastLog?.type === 'START';
 
@@ -190,12 +259,23 @@ const App: React.FC = () => {
       {/* Header */}
       <header className="bg-urban-800 border-b border-urban-700 sticky top-0 z-30">
         <div className="max-w-3xl mx-auto px-4 py-4 flex justify-center sm:justify-between items-center relative">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-urban-700 flex items-center justify-center border border-urban-600">
+          <div 
+             onClick={() => {
+                if (profile) {
+                    setFormData(profile);
+                    setView('EDIT_PROFILE');
+                }
+             }}
+             className="flex items-center gap-3 cursor-pointer group p-1.5 rounded-xl hover:bg-urban-700/50 transition-all border border-transparent hover:border-urban-700/50 select-none"
+          >
+            <div className="w-10 h-10 rounded-full bg-urban-700 flex items-center justify-center border border-urban-600 group-hover:border-urban-blue transition-colors">
               <User className="w-5 h-5 text-urban-blue" />
             </div>
             <div>
-              <h2 className="font-bold text-white text-sm">{profile?.name}</h2>
+              <h2 className="font-bold text-white text-sm flex items-center gap-2">
+                 {profile?.name}
+                 <Edit2 className="w-3 h-3 text-gray-600 group-hover:text-urban-blue transition-colors" />
+              </h2>
               <p className="text-xs text-gray-400">{profile?.bikeModel} • {profile?.plate}</p>
             </div>
           </div>

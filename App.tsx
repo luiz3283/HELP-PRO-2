@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, ShiftLog } from './types';
-import { saveProfile, getProfile, saveLog, getLogs, clearData } from './services/storageService';
+import { saveProfile, getProfile, saveLog, getLogs } from './services/storageService';
 import { Button } from './components/Button';
 import { CameraCapture } from './components/CameraCapture';
 import { History } from './components/History';
-import { Bike, User, MapPin, Camera as CameraIcon, LogOut, AlertTriangle, Loader2 } from 'lucide-react';
+import { Bike, User, MapPin, Camera as CameraIcon, AlertTriangle, Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -29,8 +29,8 @@ const App: React.FC = () => {
       } catch (e) {
         console.error("Erro ao carregar dados locais", e);
       } finally {
-        // Small timeout to prevent flicker if it loads too fast, gives a native app feel
-        setTimeout(() => setLoading(false), 500);
+        // Small timeout to prevent flicker
+        setTimeout(() => setLoading(false), 800);
       }
     };
     
@@ -43,17 +43,6 @@ const App: React.FC = () => {
       saveProfile(formData);
       setProfile(formData);
       setView('DASHBOARD');
-    }
-  };
-
-  const handleLogout = () => {
-    // Clarify to the user that "Logout" actually wipes the device data for this app
-    if(confirm("ATENÇÃO: Isso desconectará sua conta e apagará o histórico deste dispositivo.\n\nPara apenas fechar o app mantendo o login, minimize a janela.\n\nDeseja realmente sair e apagar os dados?")) {
-      clearData();
-      setProfile(null);
-      setLogs([]);
-      setView('ONBOARDING');
-      setFormData({ name: '', bikeModel: '', plate: '', company: '' });
     }
   };
 
@@ -78,7 +67,6 @@ const App: React.FC = () => {
     
     saveLog(newLog);
     setLogs(getLogs());
-    // No alert needed, UI update is enough visual feedback, or a toast could be added.
     setCaptureMode(null);
   };
 
@@ -88,7 +76,7 @@ const App: React.FC = () => {
 
   // --- VIEWS ---
 
-  // 1. Loading Splash Screen (Checks login)
+  // 1. Loading Splash Screen
   if (loading) {
     return (
       <div className="min-h-screen bg-urban-900 flex flex-col items-center justify-center">
@@ -166,7 +154,7 @@ const App: React.FC = () => {
             Entrar / Salvar Dados
           </Button>
           <p className="text-xs text-center text-gray-500 mt-4">
-            Seus dados ficarão salvos neste dispositivo automaticamente.
+            Seus dados ficarão salvos neste dispositivo.
           </p>
         </form>
       </div>
@@ -201,7 +189,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-urban-900 pb-20">
       {/* Header */}
       <header className="bg-urban-800 border-b border-urban-700 sticky top-0 z-30">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex justify-center sm:justify-between items-center relative">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-urban-700 flex items-center justify-center border border-urban-600">
               <User className="w-5 h-5 text-urban-blue" />
@@ -211,10 +199,7 @@ const App: React.FC = () => {
               <p className="text-xs text-gray-400">{profile?.bikeModel} • {profile?.plate}</p>
             </div>
           </div>
-          <button onClick={handleLogout} className="text-gray-500 hover:text-red-500 flex flex-col items-center">
-            <LogOut className="w-5 h-5" />
-            <span className="text-[10px]">Sair</span>
-          </button>
+          {/* Logout button removed as requested */}
         </div>
       </header>
 

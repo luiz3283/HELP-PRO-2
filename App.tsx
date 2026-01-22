@@ -4,9 +4,10 @@ import { saveProfile, getProfile, saveLog, getLogs, clearData } from './services
 import { Button } from './components/Button';
 import { CameraCapture } from './components/CameraCapture';
 import { History } from './components/History';
-import { Bike, User, MapPin, Camera as CameraIcon, LogOut, AlertTriangle } from 'lucide-react';
+import { Bike, User, MapPin, Camera as CameraIcon, LogOut, AlertTriangle, Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {
+  const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [logs, setLogs] = useState<ShiftLog[]>([]);
   const [view, setView] = useState<'ONBOARDING' | 'DASHBOARD' | 'CAMERA'>('ONBOARDING');
@@ -17,12 +18,23 @@ const App: React.FC = () => {
 
   // Load initial data
   useEffect(() => {
-    const savedProfile = getProfile();
-    if (savedProfile) {
-      setProfile(savedProfile);
-      setLogs(getLogs());
-      setView('DASHBOARD');
-    }
+    const checkLogin = () => {
+      try {
+        const savedProfile = getProfile();
+        if (savedProfile) {
+          setProfile(savedProfile);
+          setLogs(getLogs());
+          setView('DASHBOARD');
+        }
+      } catch (e) {
+        console.error("Erro ao carregar dados locais", e);
+      } finally {
+        // Small timeout to prevent flicker if it loads too fast, gives a native app feel
+        setTimeout(() => setLoading(false), 500);
+      }
+    };
+    
+    checkLogin();
   }, []);
 
   const handleRegister = (e: React.FormEvent) => {
@@ -35,11 +47,13 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    if(confirm("Tem certeza que deseja sair? Isso limpará os dados deste dispositivo.")) {
+    // Clarify to the user that "Logout" actually wipes the device data for this app
+    if(confirm("ATENÇÃO: Isso desconectará sua conta e apagará o histórico deste dispositivo.\n\nPara apenas fechar o app mantendo o login, minimize a janela.\n\nDeseja realmente sair e apagar os dados?")) {
       clearData();
       setProfile(null);
       setLogs([]);
       setView('ONBOARDING');
+      setFormData({ name: '', bikeModel: '', plate: '', company: '' });
     }
   };
 
@@ -74,6 +88,22 @@ const App: React.FC = () => {
 
   // --- VIEWS ---
 
+  // 1. Loading Splash Screen (Checks login)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-urban-900 flex flex-col items-center justify-center">
+         <div className="animate-pulse flex flex-col items-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-urban-blue mb-4 shadow-lg shadow-blue-500/20">
+              <Bike className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">MOTO HELP <span className="text-urban-blue">PRO KM</span></h1>
+            <Loader2 className="w-6 h-6 text-urban-blue animate-spin mt-6" />
+         </div>
+      </div>
+    );
+  }
+
+  // 2. Onboarding / Login (Only if no profile saved)
   if (view === 'ONBOARDING') {
     return (
       <div className="min-h-screen bg-urban-900 flex flex-col justify-center px-6 py-12">
@@ -133,13 +163,17 @@ const App: React.FC = () => {
             </div>
           </div>
           <Button type="submit" fullWidth className="mt-6">
-            Iniciar Jornada
+            Entrar / Salvar Dados
           </Button>
+          <p className="text-xs text-center text-gray-500 mt-4">
+            Seus dados ficarão salvos neste dispositivo automaticamente.
+          </p>
         </form>
       </div>
     );
   }
 
+  // 3. Camera View
   if (view === 'CAMERA') {
     return (
       <CameraCapture 
@@ -150,7 +184,7 @@ const App: React.FC = () => {
     );
   }
 
-  // DASHBOARD VIEW
+  // 4. Dashboard View (Logged In)
   const lastLog = logs.length > 0 ? logs[0] : null;
   const isWorking = lastLog?.type === 'START';
 
@@ -177,8 +211,9 @@ const App: React.FC = () => {
               <p className="text-xs text-gray-400">{profile?.bikeModel} • {profile?.plate}</p>
             </div>
           </div>
-          <button onClick={handleLogout} className="text-gray-500 hover:text-red-500">
+          <button onClick={handleLogout} className="text-gray-500 hover:text-red-500 flex flex-col items-center">
             <LogOut className="w-5 h-5" />
+            <span className="text-[10px]">Sair</span>
           </button>
         </div>
       </header>
